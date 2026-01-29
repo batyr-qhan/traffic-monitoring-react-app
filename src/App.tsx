@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { observer } from "mobx-react-lite";
+import { useRef } from "react";
 import "./App.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -8,13 +9,11 @@ import {
 	useMapSetup,
 	useTrafficLayer,
 } from "./hooks";
+import { useStores } from "./stores/useStores";
 
-function App() {
+const AppContent = observer(() => {
+	const { uiStore, selectionStore } = useStores();
 	const mapContainer = useRef<HTMLDivElement>(null);
-	const [selectedPointId, setSelectedPointId] = useState<number | null>(null);
-	const [showPoints, setShowPoints] = useState(true);
-	const [showClusters, setShowClusters] = useState(true);
-	const [showBorders, setShowBorders] = useState(true);
 
 	const mapRef = useMapSetup({
 		container: mapContainer.current,
@@ -37,46 +36,48 @@ function App() {
 	useTrafficLayer({
 		map: mapRef.current,
 		dtpData,
-		selectedPointId,
-		onPointSelected: setSelectedPointId,
-		showClusters,
-		showPoints,
+		selectedPointId: selectionStore.selectedPointId,
+		onPointSelected: (id) => selectionStore.selectPoint(id),
+		showClusters: uiStore.showClusters,
+		showPoints: uiStore.showPoints,
 	});
 
 	useCityBordersLayer({
 		map: mapRef.current,
 		cityBorders,
-		showBorders,
+		showBorders: uiStore.showBorders,
 	});
 
 	return (
 		<div className="wrapper">
 			<header className="app-header">
 				<h1>Traffic Accidents in Astana</h1>
-				{isLoading && <p>Loading data...</p>}
+				{isLoading && (
+					<p style={{ margin: "8px 0", color: "#666" }}>Loading data...</p>
+				)}
 				{hasError && <p style={{ color: "red" }}>Error loading data</p>}
 				<div style={{ display: "flex", gap: "20px", marginTop: "10px" }}>
 					<label>
 						<input
 							type="checkbox"
-							checked={showPoints}
-							onChange={(e) => setShowPoints(e.target.checked)}
+							checked={uiStore.showPoints}
+							onChange={(e) => uiStore.setShowPoints(e.target.checked)}
 						/>
 						Show Points
 					</label>
 					<label>
 						<input
 							type="checkbox"
-							checked={showClusters}
-							onChange={(e) => setShowClusters(e.target.checked)}
+							checked={uiStore.showClusters}
+							onChange={(e) => uiStore.setShowClusters(e.target.checked)}
 						/>
 						Show Clusters
 					</label>
 					<label>
 						<input
 							type="checkbox"
-							checked={showBorders}
-							onChange={(e) => setShowBorders(e.target.checked)}
+							checked={uiStore.showBorders}
+							onChange={(e) => uiStore.setShowBorders(e.target.checked)}
 						/>
 						Show Borders
 					</label>
@@ -85,6 +86,10 @@ function App() {
 			<div className="map-container" ref={mapContainer} />
 		</div>
 	);
+});
+
+function App() {
+	return <AppContent />;
 }
 
 export default App;
