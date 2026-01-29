@@ -108,7 +108,7 @@ export function useTrafficLayer({
 				const clickedFeature = features.find(
 					(f) =>
 						f.properties?.["cluster_id"] ===
-						(e.features[0].properties?.["cluster_id"] || null),
+						(e.features?.[0].properties?.["cluster_id"] || null),
 				);
 
 				if (clickedFeature) {
